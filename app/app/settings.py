@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 
+from django.urls import reverse_lazy
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -37,7 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'accounts.apps.AccountsConfig'
+    'accounts.apps.AccountsConfig',
+    'warehouse.apps.WarehouseConfig',
 ]
 
 MIDDLEWARE = [
@@ -125,5 +127,5 @@ MEDIA_ROOT.mkdir(exist_ok=True)
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = "/accounts/base/"
+LOGIN_REDIRECT_URL = reverse_lazy("warehouse:base")
 LOGIN_URL = "/accounts/login/"

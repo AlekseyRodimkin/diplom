@@ -1,10 +1,10 @@
 {% extends 'warehouse/base.html' %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Register{% endblock %}
 
 <h1>
     {% block header %}
-    'Login page'
+    'Register page'
     {% endblock %}
 </h1>
 
@@ -14,7 +14,7 @@
 
 
         <form method="post" class="card p-4 shadow">
-            <h2 class="text-center mb-4">Login</h2>
+            <h2 class="text-center mb-4">Register</h2>
 
             {% csrf_token %}
 
@@ -34,8 +34,7 @@
             </div>
             {% endfor %}
 
-            <button type="submit" class="btn btn-primary">Login</button>
-            <a href="/accounts/register/">Register</a>
+            <button type="submit" class="btn btn-primary w-100">Register</button>
         </form>
 
 
