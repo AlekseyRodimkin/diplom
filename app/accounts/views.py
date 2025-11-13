@@ -1,10 +1,10 @@
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.views import LogoutView
 from django.http import HttpRequest, HttpResponse
 from django.shortcuts import render
 from django.urls import reverse_lazy
-from django.views.generic import TemplateView, CreateView
-from django.contrib.auth import authenticate, login, logout
+from django.views.generic import CreateView, TemplateView
 
 from .models import Profile
 
@@ -15,7 +15,7 @@ class AppLogoutView(LogoutView):
 
 class RegisterView(CreateView):
     form_class = UserCreationForm
-    template_name = 'accounts/register.html'
+    template_name = "accounts/register.html"
     success_url = reverse_lazy("warehouse:base")
 
     def form_valid(self, form):

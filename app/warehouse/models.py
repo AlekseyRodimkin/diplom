@@ -13,6 +13,7 @@ class Item(models.Model):
     description: str: len(description) <= 500
     created_at: datetime: 2000-01-02 10:30:45.123456+00:00
     """
+
     weight = models.PositiveIntegerField(
         null=True,
         blank=True,
@@ -24,7 +25,11 @@ class Item(models.Model):
 
     @property
     def description_short(self) -> str:
-        return self.description if len(self.description) < 48 else self.description[:48] + "..."
+        return (
+            self.description
+            if len(self.description) < 48
+            else self.description[:48] + "..."
+        )
 
     class Meta:
         ordering = ["item_code"]
@@ -49,6 +54,7 @@ class Place(models.Model):
     created_at: datetime: 2000-01-02 10:30:45.123456+00:00
     zone: Zone
     """
+
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -62,7 +68,11 @@ class Place(models.Model):
 
     @property
     def description_short(self) -> str:
-        return self.description if len(self.description) < 48 else self.description[:48] + "..."
+        return (
+            self.description
+            if len(self.description) < 48
+            else self.description[:48] + "..."
+        )
 
     class Meta:
         ordering = ["title"]
@@ -84,7 +94,10 @@ class PlaceItem(models.Model):
     item: Item
     quantity: int
     """
-    place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="place_items")
+
+    place = models.ForeignKey(
+        Place, on_delete=models.CASCADE, related_name="place_items"
+    )
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="place_items")
     quantity = models.PositiveIntegerField(default=1)
     STATUSES_CHOICES = [
@@ -103,7 +116,10 @@ class PlaceItem(models.Model):
 
     class Meta:
         ordering = ["pk"]
-        unique_together = ("place", "item")  # Один товар не может дублироваться в одном месте
+        unique_together = (
+            "place",
+            "item",
+        )  # Один товар не может дублироваться в одном месте
 
     def __str__(self):
         return f"{self.item.item_code} x{self.quantity} @ {self.place.title}"
@@ -119,6 +135,7 @@ class Zone(models.Model):
     created_at: datetime: 2000-01-02 10:30:45.123456+00:00
     stock: Stock
     """
+
     title = models.CharField(max_length=100)
     description = models.TextField(max_length=500, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -132,7 +149,11 @@ class Zone(models.Model):
 
     @property
     def description_short(self) -> str:
-        return self.description if len(self.description) < 48 else self.description[:48] + "..."
+        return (
+            self.description
+            if len(self.description) < 48
+            else self.description[:48] + "..."
+        )
 
     class Meta:
         ordering = ["title"]
@@ -151,6 +172,7 @@ class Stock(models.Model):
     description: str: len(description) <= 500
     created_at: datetime: 2000-01-02 10:30:45.123456+00:00
     """
+
     title = models.CharField(max_length=100)
     address = models.CharField(max_length=300, null=True, blank=True)
     description = models.TextField(max_length=500, null=True, blank=True)
@@ -158,7 +180,11 @@ class Stock(models.Model):
 
     @property
     def description_short(self) -> str:
-        return self.description if len(self.description) < 48 else self.description[:48] + "..."
+        return (
+            self.description
+            if len(self.description) < 48
+            else self.description[:48] + "..."
+        )
 
     class Meta:
         ordering = ["pk"]

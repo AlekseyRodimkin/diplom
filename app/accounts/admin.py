@@ -26,9 +26,9 @@ class ...Inline - для связи <One to Many> и <Many to Many>
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
     list_display = "pk", "bio", "user_verbose"
-    list_display_links = "pk",
-    ordering = "pk",
-    search_fields = "bio",
+    list_display_links = ("pk",)
+    ordering = ("pk",)
+    search_fields = ("bio",)
     search_help_text = "bio"
     list_per_page = 50
 
