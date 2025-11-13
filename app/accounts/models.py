@@ -9,3 +9,11 @@ class Profile(models.Model):
 
     def __str__(self):
         return f"Profile #{self.pk} by {self.user.username}"
+
+
+class Approval(models.Model):
+    ...
+
+
+class Worker(models.Model):
+    ...
