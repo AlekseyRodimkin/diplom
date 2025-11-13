@@ -87,6 +87,19 @@ class PlaceItem(models.Model):
     place = models.ForeignKey(Place, on_delete=models.CASCADE, related_name="place_items")
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="place_items")
     quantity = models.PositiveIntegerField(default=1)
+    STATUSES_CHOICES = [
+        ("ok", "normal"),
+        ("blk", "block"),
+        ("no", "absent"),
+        ("new", "new"),
+        ("dock", "registration"),
+    ]
+
+    STATUS = models.CharField(
+        max_length=20,
+        choices=STATUSES_CHOICES,
+        default="new",
+    )
 
     class Meta:
         ordering = ["pk"]

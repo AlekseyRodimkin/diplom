@@ -13,6 +13,7 @@ list_filter - сортировки
 readonly_fields - блокировка изменяемости
 search_help_text - описание поля поиска
 list_per_page - кол-во строк в таблице
+list_editable - изменяемые колонки
 
 
 Опции связанных объектов

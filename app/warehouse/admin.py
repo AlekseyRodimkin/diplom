@@ -14,6 +14,7 @@ list_filter - сортировки
 readonly_fields - блокировка изменяемости
 search_help_text - описание поля поиска
 list_per_page - кол-во строк в таблице
+list_editable - изменяемые колонки
 
 
 Опции связанных объектов
@@ -94,12 +95,13 @@ class PlaceAdmin(admin.ModelAdmin):
 
 @admin.register(PlaceItem)
 class PlaceItemAdmin(admin.ModelAdmin):
-    list_display = "pk", "place", "item", "quantity",
+    list_display = "pk", "place", "item", "quantity", "STATUS"
     list_display_links = "pk",
     ordering = "pk",
     autocomplete_fields = "place", "item",
     search_fields = "place__title", "item__item_code", "quantity",
     search_help_text = "place__title , item__item_code, quantity"
+    list_editable = ("STATUS",)
     list_per_page = 50
 
 
