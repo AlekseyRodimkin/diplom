@@ -101,11 +101,11 @@ class PlaceItem(models.Model):
     item = models.ForeignKey(Item, on_delete=models.CASCADE, related_name="place_items")
     quantity = models.PositiveIntegerField(default=1)
     STATUSES_CHOICES = [
-        ("ok", "normal"),
-        ("blk", "block"),
-        ("no", "absent"),
+        ("ok", "ok"),
+        ("blk", "blk"),
+        ("no", "no"),
         ("new", "new"),
-        ("dock", "registration"),
+        ("dock", "dock"),
     ]
 
     STATUS = models.CharField(
