@@ -1,44 +1,42 @@
 {% extends 'warehouse/base.html' %}
 
-{% block title %}Login{% endblock %}
+{% block title %}Вход{% endblock %}
 
-<h1>
-    {% block header %}
-    'Login page'
-    {% endblock %}
-</h1>
 
 {% block body %}
-<div class="row justify-content-center">
-    <div class="col-12 col-sm-8 col-md-6 col-lg-4">
 
+<div class="d-flex justify-content-center">
+    <div class="col-12 col-sm-10 col-md-6 col-lg-4 col-xl-3">
 
-        <form method="post" class="card p-4 shadow">
-            <h2 class="text-center mb-4">Login</h2>
-
+        <form method="post" class="card p-4 shadow border-0 bg-body-tertiary">
+            <h3 class="text-center mb-4">Вход</h3>
             {% csrf_token %}
 
             {% if error %}
-            <div class="alert alert-danger">{{ error }}</div>
+            <div class="alert alert-danger text-center">{{ error }}</div>
             {% endif %}
 
             {% for field in form %}
             <div class="mb-3">
-                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                <label for="{{ field.id_for_label }}" class="form-label fw-semibold">{{ field.label }}</label>
                 {{ field }}
                 {% if field.errors %}
-                <div class="text-danger small">
-                    {{ field.errors }}
-                </div>
+                <div class="text-danger small mt-1">{{ field.errors }}</div>
                 {% endif %}
             </div>
             {% endfor %}
 
-            <button type="submit" class="btn btn-primary">Login</button>
-            <a href="/accounts/register/">Register</a>
-        </form>
+            <button type="submit" class="btn btn-primary w-100 mb-3">
+                Войти
+            </button>
 
+            <div class="text-center">
+                <a href="{% url 'accounts:register' %}" class="text-decoration-none small">Регистрация</a>
+            </div>
+
+        </form>
 
     </div>
 </div>
+
 {% endblock %}
