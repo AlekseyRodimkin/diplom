@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "accounts.apps.AccountsConfig",
     "warehouse.apps.WarehouseConfig",
     "structure.apps.StructureConfig",
+    "staff.apps.StaffConfig",
 ]
 
 MIDDLEWARE = [

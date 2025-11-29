@@ -164,7 +164,7 @@ class InventoryHistoryView(LoginRequiredMixin, ListView):
             place      - частичное совпадение названия места хранения
             item_code  - частичное совпадение кода товара
             date       - дата
-            работник   - частичное совпадение username / first_name / last_name
+            работник   - частичное совпадение username / first_name / last_name / email
 
         Возвращает:
             QuerySet - отфильтрованный набор History или пустой набор

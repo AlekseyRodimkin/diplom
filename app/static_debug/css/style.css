@@ -23,3 +23,15 @@
     text-decoration: underline;
     color: blue;
 }
+
+.nav-blocks-container {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.nav-block h4 {
+    width: 180px;
+    min-width: 180px;
+    text-align: left;
+}

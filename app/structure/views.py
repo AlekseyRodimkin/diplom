@@ -12,7 +12,7 @@ class StructureManagerView(LoginRequiredMixin, PermissionRequiredMixin, FormView
     """
         Представление для создания-удаления склада / зоны / места.
         Требует разрешения:
-        - Создание / изменение / 
+        - Создание / изменение /
 
         Основная логика:
         - Добавляет форму StructureActionForm в контекст шаблона и валидирует ей входные параметры
