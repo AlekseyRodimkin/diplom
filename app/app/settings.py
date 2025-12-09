@@ -1,6 +1,6 @@
 import os
 from pathlib import Path
-
+import logging.config
 from django.urls import reverse_lazy
 from dotenv import load_dotenv
 
@@ -11,9 +11,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv("DJANGO_SECRET_KEY")
 
 ALLOWED_HOSTS = [
-    "0.0.0.0",
-    "127.0.0.1",
-] + os.getenv(
+                    "0.0.0.0",
+                    "127.0.0.1",
+                ] + os.getenv(
     "DJANGO_ALLOWED_HOSTS", ""
 ).split(",")
 
@@ -60,6 +60,17 @@ MIDDLEWARE = [
     "allauth.account.middleware.AccountMiddleware",
 ]
 
+##### Конфигурация 'django-allauth' #####
+# AUTHENTICATION_BACKENDS - бэкенды аутентификации
+#       ModelBackend - стандартный бэкенд Django
+#       AuthenticationBackend - бэкенд allauth
+# ACCOUNT_SIGNUP_FIELDS - поля для формы регистрации (* - обязательное поле)
+# ACCOUNT_EMAIL_VERIFICATION - верификация email
+#       mandatory - пользователь не сможет войти, пока не подтвердит email
+# ACCOUNT_LOGIN_METHODS - разрешённые методы входа
+#       email — вход только по email (логин по username отключён)
+# ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION - автоматический логин после подтверждения email по ссылке
+# ACCOUNT_CONFIRM_EMAIL_ON_GET - переход по ссылке из письма сразу подтверждает email
 SITE_ID = 1
 
 AUTHENTICATION_BACKENDS = [
@@ -67,20 +78,22 @@ AUTHENTICATION_BACKENDS = [
     "allauth.account.auth_backends.AuthenticationBackend",
 ]
 
-# Требовать подтверждение почты
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"  # none, optional, mandatory
+ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
+ACCOUNT_EMAIL_VERIFICATION = "mandatory"
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
-ACCOUNT_AUTHENTICATION_METHOD = "email"
+ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
-EMAIL_HOST = "smtp.yandex.ru"
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = "rod.project@ya.ru"
-EMAIL_HOST_PASSWORD = "lvdknqdewqmcorkj"
-DEFAULT_FROM_EMAIL = "rod.project@ya.ru"
+EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
+EMAIL_PORT = os.getenv("EMAIL_PORT", 587)
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", '0') == "1"
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
+####################################################
+LOGIN_REDIRECT_URL = reverse_lazy("warehouse:main")
+LOGIN_URL = "/account/login/"
 
 ROOT_URLCONF = "app.urls"
 
@@ -101,6 +114,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "app.wsgi.application"
 
+##### Конфигурация Базы данных #####
+# База данных Posgresql в контейнере
+# DEFAULT_AUTO_FIELD - настройка исправляющая переполнение первичного ключа
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -110,11 +126,10 @@ DATABASES = {
         "HOST": os.getenv("POSTGRES_HOST", "postgres"),
         "PORT": os.getenv("POSTGRES_PORT", "5432"),
     },
-    "sqlite": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    },
 }
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+####################################################
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -136,24 +151,63 @@ TIME_ZONE = "UTC"
 USE_I18N = True
 USE_TZ = True
 
+##### Конфигурация файлов #####
+# Настройки продакшен папки для статических файлов
 STATIC_URL = "/static/"
 STATIC_ROOT = BASE_DIR / "static"
 
-# for Debug = True
+# Настройки DEBUG папки для статических файлов
 STATICFILES_DIRS = [
     BASE_DIR / "static_debug",
     # BASE_DIR / 'app_name/static',
 ]
 
+# допустимые типы загружаемых файлов
 ALLOWED_MIME_TYPES = []
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "uploads"
 MEDIA_ROOT.mkdir(exist_ok=True)
+####################################################
 
-DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-LOGIN_REDIRECT_URL = reverse_lazy("warehouse:main")
-LOGIN_URL = "/account/login/"
-SESSION_COOKIE_AGE = 60 * 60 * 8  # 8 часов
-SESSION_EXPIRE_AT_BROWSER_CLOSE = False  # при закрытии браузера
+##### Конфигурация сессии #####
+# Хранение сессии 8 часов
+# Окончание сессии при закрытии браузера отключено
+SESSION_COOKIE_AGE = 60 * 60 * 8
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+####################################################
+
+
+##### Конфигурация логирования #####
+# Логирование в файл и в консоль
+# Ротация файлов: 5 по 5mb
+# Уровень логирования Debug
+LOG_DIR = BASE_DIR / "logs"
+LOG_DIR.mkdir(exist_ok=True)
+LOGFILE_PATH = LOG_DIR / "app.log"
+LOGFILE_SIZE = 1024 * 1024 * 5  # 5 mb
+LOGFILE_COUNT = 5
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {"format": "%(asctime)s [%(levelname)s] %(name)s: %(message)s"}
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+        "logfile": {
+            "class": "logging.handlers.RotatingFileHandler",
+            "filename": LOGFILE_PATH,
+            "maxBytes": LOGFILE_SIZE,
+            "backupCount": LOGFILE_COUNT,
+            "formatter": "verbose",
+        },
+    },
+    "root": {"handlers": ["console", "logfile"], "level": "DEBUG"},
+}
+####################################################
