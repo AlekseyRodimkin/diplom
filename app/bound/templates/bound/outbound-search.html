@@ -1,14 +1,14 @@
-{% extends 'bound/inbound_header.html' %}
+{% extends 'bound/outbound_header.html' %}
 {% load widget_tweaks %}
 
-{% block title %}Поставки{% endblock %}
+{% block title %}Отгрузки{% endblock %}
 
 {% block body %}
 <div class="container-fluid p-0">
     <div class="mb-2 p-1 rounded small bg-body-tertiary">
         <form method="get" class="mb-1">
 
-            {# Ошибки летят из forms.py/InboundSearchForm.clean() #}
+            {# Ошибки летят из forms.py/OutboundSearchForm.clean() #}
             {% if form.non_field_errors %}
             <div class="alert alert-danger">
                 {% for error in form.non_field_errors %}
@@ -28,18 +28,18 @@
                 </div>
 
                 <div class="col-auto">
-                    {{ form.inbound_number.label_tag }}
-                    {{ form.inbound_number|add_class:"form-control form-control-sm" }}
-                    {% if form.inbound_number.errors %}
-                    <div class="text-danger small">{{ form.inbound_number.errors }}</div>
+                    {{ form.outbound_number.label_tag }}
+                    {{ form.outbound_number|add_class:"form-control form-control-sm" }}
+                    {% if form.outbound_number.errors %}
+                    <div class="text-danger small">{{ form.outbound_number.errors }}</div>
                     {% endif %}
                 </div>
 
                 <div class="col-auto">
-                    {{ form.supplier.label_tag }}
-                    {{ form.supplier|add_class:"form-control form-control-sm" }}
-                    {% if form.supplier.errors %}
-                    <div class="text-danger small">{{ form.supplier.errors }}</div>
+                    {{ form.recipient.label_tag }}
+                    {{ form.recipient|add_class:"form-control form-control-sm" }}
+                    {% if form.recipient.errors %}
+                    <div class="text-danger small">{{ form.recipient.errors }}</div>
                     {% endif %}
                 </div>
 
@@ -72,7 +72,7 @@
                 </div>
 
                 <div class="col-auto ms-auto">
-                    <a href="/warehouse/search/inbound/?stock=&inbound_number=&supplier=&status=&planned_date=&actual_date=">
+                    <a href="/warehouse/search/outbound/?stock=&outbound_number=&recipient=&status=&planned_date=&actual_date=">
                         Сбросить
                     </a>
                 </div>
@@ -88,7 +88,7 @@
                 <tr>
                     <th>Номер</th>
                     <th>Склад</th>
-                    <th>Поставщик</th>
+                    <th>Заказчик</th>
                     <th>Планируемая дата</th>
                     <th>Фактическая дата</th>
                     <th>Статус</th>
@@ -101,36 +101,37 @@
                 </tr>
                 </thead>
                 <tbody>
-                {% for inb in inbounds %}
+                {% for outb in outbounds %}
                 <tr>
-                    <td class="bg-body-tertiary"><b>{{ inb.inbound_number }}</b></td>
-                    <td>{{ inb.stock.title }}</td>
-                    <td>{{ inb.supplier|default:"—" }}</td>
-                    <td>{{ inb.planned_date|date:"d.m.Y" }}</td>
+                    <td class="bg-body-tertiary"><b>{{ outb.outbound_number }}</b></td>
+                    <td>{{ outb.stock.title }}</td>
+                    <td>{{ outb.recipient|default:"—" }}</td>
+                    <td>{{ outb.planned_date|date:"d.m.Y" }}</td>
                     <td>
-                        {% if inb.actual_date %}
-                        {{ inb.actual_date|date:"d.m.Y" }}
+                        {% if outb.actual_date %}
+                        {{ outb.actual_date|date:"d.m.Y" }}
                         {% else %}
                         <span class="text-muted">—</span>
                         {% endif %}
                     </td>
                     <td>
                         <span class="badge
-                            {% if inb.status == 'completed' %}bg-success
-                            {% elif inb.status == 'in_progress' %}bg-warning
-                            {% elif inb.status == 'cancelled' %}bg-danger
-                            {% elif inb.status == 'planned' %}bg-info
+                            {% if outb.status == 'completed' %}bg-success
+                            {% elif outb.status == 'in_progress' %}bg-warning
+                            {% elif outb.status == 'cancelled' %}bg-danger
+                            {% elif outb.status == 'planned' %}bg-info
                             {% else %}bg-secondary{% endif %}">
-                            {{ inb.get_status_display }}
+                            {{ outb.get_status_display }}
                         </span>
                     </td>
-                    <td>{{ inb.total_items }} / {{ inb.total_quantity }}</td>
-                    <td>{{ inb.created_by }}</td>
-                    <td>{{ inb.description_short }}</td>
-                    <td>{{ inb.created_at }}</td>
-                    <td>{{ inb.updated_at }}</td>
+                    <td>{{ outb.total_items }} / {{ outb.total_quantity }}</td>
+                    <td>{{ outb.created_by }}</td>
+                    <td>{{ outb.description_short }}</td>
+                    <td>{{ outb.created_at }}</td>
+                    <td>{{ outb.updated_at }}</td>
                     <td class="text-center">
-                        <a class="get-docs-button" type="button" href="{% url 'bound:download_inbound_docs' inb.id %}">
+                        <a class="get-docs-button" type="button"
+                           href="{% url 'bound:download_outbound_docs' outb.id %}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                  class="bi bi-file-earmark-arrow-down" viewBox="0 0 16 16">
                                 <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293z"/>

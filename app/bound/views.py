@@ -16,8 +16,8 @@ from django.urls import reverse_lazy
 from django.views.generic import FormView, ListView
 from warehouse.models import Item, Place, PlaceItem
 
-from .forms import InboundCreateForm, InboundSearchForm
-from .models import Inbound, InboundItem
+from .forms import InboundCreateForm, InboundSearchForm, OutboundSearchForm
+from .models import Inbound, InboundItem, Outbound
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +51,7 @@ class InboundSearchView(LoginRequiredMixin, ListView):
     - Выводит результат поиска.
 
     Шаблон:
-        bound/inbound-inventory-search.html
+        bound/inbound-search.html
 
     Поддерживаемые параметры поиска:
         stock          - фильтрация по складу
@@ -103,6 +103,81 @@ class InboundSearchView(LoginRequiredMixin, ListView):
             qs = qs.filter(actual_date__lte=data["actual_date"])
 
         qs = qs.order_by("-inbound_number")
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        user = self.request.user
+        context["user_is_admin"] = user.is_superuser
+        context["user_is_director"] = user.groups.filter(name="director").exists()
+        context["user_is_operator"] = user.groups.filter(name="operator").exists()
+        context["form"] = InboundSearchForm(self.request.GET or None)
+        context["total"] = self.get_queryset().count()
+
+        return context
+
+
+class OutboundSearchView(LoginRequiredMixin, ListView):
+    """
+    Представление для поиска Отгрузок
+
+    Основная логика:
+    - Добавляет форму OutboundSearchForm в контекст шаблона и валидирует ей входные параметры
+    - Выводит результат поиска.
+
+    Шаблон:
+        bound/inbound-search.html
+
+    Поддерживаемые параметры поиска:
+        stock          - фильтрация по складу
+        status         - фильтрация по статусу
+        outbound_number - частичное совпадение номера отгрузки
+        recipient       - частичное совпадение заказчика
+        planned_date   - фильтрация по >= плановой дате отгрузки
+        actual_date    - фильтрация по <= фактической дате отгрузки
+
+    Возвращает:
+        QuerySet - отфильтрованный набор Outbound или пустой набор
+                    при отсутствии параметров запроса.
+    """
+
+    model = Outbound
+    template_name = "bound/outbound-search.html"
+    context_object_name = "outbounds"
+    paginate_by = 100
+    ordering = ["-planned_date", "-created_at"]
+
+    def get_queryset(self):
+        qs = Outbound.objects.select_related("stock").all()
+
+        if not self.request.GET:
+            return qs.none()
+
+        form = OutboundSearchForm(self.request.GET)
+        if not form.is_valid():
+            return qs.none()
+
+        data = form.cleaned_data
+
+        if data["stock"]:
+            qs = qs.filter(stock=data["stock"])
+
+        if data["outbound_number"]:
+            qs = qs.filter(inbound_number__icontains=data["outbound_number"].strip())
+
+        if data["recipient"]:
+            qs = qs.filter(supplier__icontains=data["recipient"].strip())
+
+        if data["status"]:
+            qs = qs.filter(status=data["status"])
+
+        if data["planned_date"]:
+            qs = qs.filter(planned_date__gte=data["planned_date"])
+
+        if data["actual_date"]:
+            qs = qs.filter(actual_date__lte=data["actual_date"])
+
+        qs = qs.order_by("-outbound_number")
         return qs
 
     def get_context_data(self, **kwargs):

@@ -15,7 +15,7 @@ INBOUND_STATUS_CHOICES = [
 
 
 class InboundSearchForm(forms.Form):
-    """Форма на вкладке Поиск прихода"""
+    """Форма на вкладке Поиск поставки"""
 
     stock = forms.ModelChoiceField(
         queryset=Stock.objects.all(), required=False, label="Склад"
@@ -35,6 +35,43 @@ class InboundSearchForm(forms.Form):
         max_length=200,
         required=False,
         label="Поставщик",
+        widget=forms.TextInput(attrs={"placeholder": "ИП..."}),
+    )
+
+    planned_date = forms.DateField(
+        required=False,
+        label="Планируемая дата",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+
+    actual_date = forms.DateField(
+        required=False,
+        label="Фактическая дата",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+
+
+class OutboundSearchForm(forms.Form):
+    """Форма на вкладке Поиск отгрузки"""
+
+    stock = forms.ModelChoiceField(
+        queryset=Stock.objects.all(), required=False, label="Склад"
+    )
+    status = forms.ChoiceField(
+        choices=[("", "---")] + INBOUND_STATUS_CHOICES, required=False, label="Статус"
+    )
+
+    outbound_number = forms.CharField(
+        max_length=50,
+        required=False,
+        label="Номер отгрузки",
+        widget=forms.TextInput(attrs={"placeholder": "OUT-..."}),
+    )
+
+    recipient = forms.CharField(
+        max_length=200,
+        required=False,
+        label="Заказчик",
         widget=forms.TextInput(attrs={"placeholder": "ИП..."}),
     )
 
