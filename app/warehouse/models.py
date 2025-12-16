@@ -136,6 +136,7 @@ class PlaceItem(models.Model):
     full_address = models.CharField(max_length=500, blank=True, db_index=True)
     STATUSES_CHOICES = [
         ("inbound", "inbound"),
+        ("outbound", "outbound"),
         ("blk", "block"),
         ("new", "new"),
         ("ok", "ok"),
@@ -151,6 +152,8 @@ class PlaceItem(models.Model):
         """
         Автоматически заполняет full_address при каждом сохранении
         строкой 'Stock.title/Zone.title/Place.title'
+
+        Автоматически ставит статус в соответствии с адресом
         """
         parts = [self.place.title]
         if self.place.zone:
@@ -158,6 +161,12 @@ class PlaceItem(models.Model):
             if self.place.zone.stock:
                 parts.insert(0, self.place.zone.stock.title)
         self.full_address = "/".join(parts)
+
+        address = self.place.title.lower().strip()
+        if address in ("BS01", "BS02"):
+            self.status = "block"
+        elif address in ("inbound", "outbound", "new"):
+            self.status = address
 
         super().save(*args, **kwargs)
 

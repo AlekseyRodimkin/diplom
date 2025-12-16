@@ -12,7 +12,8 @@ urlpatterns = [
     path("warehouse/", include("warehouse.urls")),
     path("warehouse/", include("structure.urls")),
     path("warehouse/", include("staff.urls")),
-    path("warehouse/", include("bound.urls")),
+    path("warehouse/", include("wave.urls")),
+    path("terminal/", include("terminal.urls")),
 ]
 
 if settings.DEBUG:

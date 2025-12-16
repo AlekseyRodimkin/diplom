@@ -34,17 +34,6 @@
 </div>
 
 <div class="nav-block d-flex flex-wrap align-items-center gap-3 p-3 mb-2 bg-body-tertiary rounded-3">
-    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-people"
-         viewBox="0 0 16 16">
-        <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002-.014.002zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a6 6 0 0 0-1.23-.247A7 7 0 0 0 5 9c-4 0-5 3-5 4q0 1 1 1h4.216A2.24 2.24 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.5 5.5 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4"/>
-    </svg>
-
-    <h4 class="m-0 title-fixed">Персонал</h4>
-
-    <a class="btn btn-success btn-sm" href="{% url 'staff:staff-search' %}">Поиск персонала</a>
-</div>
-
-<div class="nav-block d-flex flex-wrap align-items-center gap-3 p-3 mb-2 bg-body-tertiary rounded-3">
     <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-box-arrow-in-down"
          viewBox="0 0 16 16">
         <path fill-rule="evenodd"
@@ -55,9 +44,9 @@
 
     <h4 class="m-0 title-fixed">Поставки</h4>
 
-    <a class="btn btn-info btn-sm" href="{% url 'bound:inbound-search' %}">Поиск поставок</a>
+    <a class="btn btn-success btn-sm" href="{% url 'wave:inbound-search' %}">Поиск поставок</a>
     {% if user_is_admin or user_is_director or user_is_operator %}
-    <a class="btn btn-info btn-sm" href="{% url 'bound:inbound-create' %}">Создать поставку</a>
+    <a class="btn btn-success btn-sm" href="{% url 'wave:inbound-create' %}">Создать поставку</a>
     {% endif %}
 </div>
 
@@ -72,10 +61,21 @@
 
     <h4 class="m-0 title-fixed">Отгрузки</h4>
 
-    <a class="btn btn-warning btn-sm" href="{% url 'bound:outbound-search' %}">Поиск отгрузок</a>
-    <!--    {% if user_is_admin or user_is_director or user_is_operator %}-->
-    <!--    <a class="btn btn-info btn-sm" href="{% url 'bound:inbound-create' %}">Создать поставку</a>-->
-    <!--    {% endif %}-->
+    <a class="btn btn-danger btn-sm" href="{% url 'wave:outbound-search' %}">Поиск отгрузок</a>
+    {% if user_is_admin or user_is_director or user_is_operator %}
+    <a class="btn btn-danger btn-sm" href="{% url 'wave:outbound-create' %}">Создать отгрузку</a>
+    {% endif %}
+</div>
+
+<div class="nav-block d-flex flex-wrap align-items-center gap-3 p-3 mb-2 bg-body-tertiary rounded-3">
+    <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" fill="currentColor" class="bi bi-people"
+         viewBox="0 0 16 16">
+        <path d="M15 14s1 0 1-1-1-4-5-4-5 3-5 4 1 1 1 1zm-7.978-1L7 12.996c.001-.264.167-1.03.76-1.72C8.312 10.629 9.282 10 11 10c1.717 0 2.687.63 3.24 1.276.593.69.758 1.457.76 1.72l-.008.002-.014.002zM11 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4m3-2a3 3 0 1 1-6 0 3 3 0 0 1 6 0M6.936 9.28a6 6 0 0 0-1.23-.247A7 7 0 0 0 5 9c-4 0-5 3-5 4q0 1 1 1h4.216A2.24 2.24 0 0 1 5 13c0-1.01.377-2.042 1.09-2.904.243-.294.526-.569.846-.816M4.92 10A5.5 5.5 0 0 0 4 13H1c0-.26.164-1.03.76-1.724.545-.636 1.492-1.256 3.16-1.275ZM1.5 5.5a3 3 0 1 1 6 0 3 3 0 0 1-6 0m3-2a2 2 0 1 0 0 4 2 2 0 0 0 0-4"/>
+    </svg>
+
+    <h4 class="m-0 title-fixed">Персонал</h4>
+
+    <a class="btn btn-dark btn-sm" href="{% url 'staff:staff-search' %}">Поиск персонала</a>
 </div>
 
 {% else %}

@@ -1,4 +1,4 @@
-{% extends 'bound/outbound_header.html' %}
+{% extends 'wave/outbound_header.html' %}
 {% load widget_tweaks %}
 
 {% block title %}Отгрузки{% endblock %}
@@ -68,7 +68,7 @@
                 </div>
 
                 <div class="col-auto mx-2">
-                    <button type="submit" class="btn btn-primary btn-sm">Поиск</button>
+                    <button type="submit" class="btn btn-success btn-sm">Поиск</button>
                 </div>
 
                 <div class="col-auto ms-auto">
@@ -131,7 +131,7 @@
                     <td>{{ outb.updated_at }}</td>
                     <td class="text-center">
                         <a class="get-docs-button" type="button"
-                           href="{% url 'bound:download_outbound_docs' outb.id %}">
+                           href="{% url 'wave:download_outbound_docs' outb.id %}">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                                  class="bi bi-file-earmark-arrow-down" viewBox="0 0 16 16">
                                 <path d="M8.5 6.5a.5.5 0 0 0-1 0v3.793L6.354 9.146a.5.5 0 1 0-.708.708l2 2a.5.5 0 0 0 .708 0l2-2a.5.5 0 0 0-.708-.708L8.5 10.293z"/>

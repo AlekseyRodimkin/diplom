@@ -5,6 +5,7 @@ from .models import Item, Place, PlaceItem, Stock, Zone
 # Статусы продублированы от Models.PlaceItem.STATUS_CHOICES
 PLACE_ITEM_STATUS_CHOICES = [
     ("inbound", "inbound"),
+    ("outbound", "outbound"),
     ("blk", "block"),
     ("new", "new"),
     ("ok", "ok"),

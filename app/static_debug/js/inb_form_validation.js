@@ -5,7 +5,7 @@ inbInput.addEventListener("change", function (e) {
 
     if (!file) return;
 
-    if (!file.name.includes("INB-FORM.xlsx")) {
+    if (file.name !== "INB-FORM.xlsx") {
         alert("Имя файла должно быть INB-FORM.xlsx");
         inbInput.value = "";
     }

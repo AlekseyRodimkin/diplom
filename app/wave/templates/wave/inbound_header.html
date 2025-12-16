@@ -8,16 +8,19 @@
 
         <li class="nav-item">
             <a class="nav-link py-1 px-3 {% if request.resolver_match.url_name == 'inbound-search' %}active{% endif %}"
-               href="{% url 'bound:inbound-search' %}">Поиск поставок</a>
+               href="{% url 'wave:inbound-search' %}">Поиск поставок</a>
         </li>
 
         {% if user_is_admin or user_is_director or user_is_operator %}
         <li class="nav-item">
             <a class="nav-link py-1 px-3 {% if request.resolver_match.url_name == 'inbound-create' %}active{% endif %}"
-               href="{% url 'bound:inbound-create' %}">Создание поставки</a>
+               href="{% url 'wave:inbound-create' %}">Создание поставки</a>
         </li>
         {% endif %}
 
     </ul>
 </div>
+{% endblock %}
+
+{% block scripts %}
 {% endblock %}

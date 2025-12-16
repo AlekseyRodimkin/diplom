@@ -25,7 +25,10 @@ class ...Inline - для связи <One to Many> и <Many to Many>
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = "pk", "user_verbose", "gender"
+    list_display = (
+        "pk",
+        "user_verbose",
+    )
     list_display_links = ("pk",)
     ordering = ("pk",)
     list_per_page = 50

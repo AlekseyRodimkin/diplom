@@ -75,11 +75,7 @@
             <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center">
 
                 <div class="me-md-4 mb-3 mb-md-0">
-                    {% if user.profile.gender == 'M' %}
                     <img src="/static/assets/man.png" alt="mdo" width="80" height="80" class="rounded-circle">
-                    {% else %}
-                    <img src="/static/assets/woman.png" alt="mdo" width="80" height="80" class="rounded-circle">
-                    {% endif %}
                 </div>
 
                 <div class="flex-grow-1">
@@ -87,12 +83,6 @@
                     <h4 class="mb-1">{{ user.get_full_name|default:user.username }}</h4>
 
                     <p class="text-muted mb-1"><strong>Логин:</strong> {{ user.username }}</p>
-
-                    {% if user.profile.gender %}
-                    <p class="text-muted mb-1">
-                        <strong>Пол:</strong> {{ user.profile.get_gender_display }}
-                    </p>
-                    {% endif %}
 
                     <p class="text-muted mb-1">
                         <strong>Должность:</strong>

@@ -5,4 +5,4 @@ setTimeout(() => {
         a.classList.add('fade');
         setTimeout(() => a.remove(), 500);
     });
-}, 7000); // 7 секунд
+}, 8000); // 8 секунд

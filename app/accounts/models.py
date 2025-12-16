@@ -13,9 +13,6 @@ class Profile(models.Model):
     """
 
     user = models.OneToOneField(User, on_delete=CASCADE)
-    gender = models.CharField(
-        max_length=1, choices=[("M", "Мужчина"), ("F", "Женщина")]
-    )
 
     class Meta:
         verbose_name = "Профиль"

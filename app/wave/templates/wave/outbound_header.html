@@ -1,0 +1,23 @@
+{% extends 'warehouse/base.html' %}
+
+{% block page_title %}Отгрузки{% endblock %}
+
+{% block page_subtitle %}
+<div class="flex-grow-1 d-flex justify-content-center">
+    <ul class="nav nav-pills gap-2 flex-wrap small">
+
+        <li class="nav-item">
+            <a class="nav-link py-1 px-3 {% if request.resolver_match.url_name == 'outbound-search' %}active{% endif %}"
+               href="{% url 'wave:outbound-search' %}">Поиск отгрузок</a>
+        </li>
+
+        {% if user_is_admin or user_is_director or user_is_operator %}
+        <li class="nav-item">
+            <a class="nav-link py-1 px-3 {% if request.resolver_match.url_name == 'outbound-create' %}active{% endif %}"
+               href="{% url 'wave:outbound-create' %}">Создание отгрузки</a>
+        </li>
+        {% endif %}
+
+    </ul>
+</div>
+{% endblock %}

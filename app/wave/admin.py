@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib import admin
 
-from .models import Inbound, InboundItem, OutboundItem, Outbound
+from .models import Inbound, InboundItem, Outbound, OutboundItem
 
 """
 Опции административной панели

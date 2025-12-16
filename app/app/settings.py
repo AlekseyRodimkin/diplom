@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     "warehouse.apps.WarehouseConfig",
     "structure.apps.StructureConfig",
     "staff.apps.StaffConfig",
-    "bound.apps.BoundConfig",
+    "wave.apps.WaveConfig",
+    "terminal.apps.TerminalConfig",
 ]
 
 MIDDLEWARE = [

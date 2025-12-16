@@ -1,7 +1,7 @@
-{% extends 'bound/inbound_header.html' %}
+{% extends 'wave/outbound_header.html' %}
 {% load widget_tweaks %}
 
-{% block title %}Создание поставки{% endblock %}
+{% block title %}Создание отгрузки{% endblock %}
 
 {% block body %}
 <div class="container-fluid p-0">
@@ -16,15 +16,15 @@
                     <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16m.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.47l-.451-.081.082-.381 2.29-.287zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2"/>
                 </svg>
             </button>
-            <a class="get-inb-form-button" type="button" href="{% url 'bound:download_inbound_form' %}">
-                Форма-Поставки
+            <a class="get-inb-form-button" type="button" href="{% url 'wave:download_outbound_form' %}">
+                Форма-Отгрузки
             </a>
         </div>
 
         <form method="post" class="mb-1" enctype="multipart/form-data">
             {% csrf_token %}
 
-            {# Ошибки летят из forms.py/InboundCreateForm.clean() #}
+            {# Ошибки летят из forms.py/OutboundCreateForm.clean() #}
             {% if form.non_field_errors %}
             <div class="alert alert-danger">
                 {% for error in form.non_field_errors %}
@@ -52,10 +52,10 @@
                 </div>
 
                 <div class="col-auto">
-                    {{ form.supplier.label_tag }}
-                    {{ form.supplier|add_class:"form-control form-control-sm" }}
-                    {% if form.supplier.errors %}
-                    <div class="text-danger small">{{ form.supplier.errors }}</div>
+                    {{ form.recipient.label_tag }}
+                    {{ form.recipient|add_class:"form-control form-control-sm" }}
+                    {% if form.recipient.errors %}
+                    <div class="text-danger small">{{ form.recipient.errors }}</div>
                     {% endif %}
                 </div>
 
@@ -83,16 +83,6 @@
                     {% endif %}
                 </div>
 
-<!--                Для отправки файлов как часть формы-->
-<!--                <div class="col-12 mt-3">-->
-<!--                    {{ form.documents.label_tag }}-->
-<!--                    {{ form.documents|add_class:"form-control form-control-sm" }}-->
-<!--                    {% if form.documents.errors %}-->
-<!--                    <div class="text-danger small">{{ form.documents.errors }}</div>-->
-<!--                    {% endif %}-->
-<!--                </div>-->
-
-
                 <div class="col-auto mt-3 mx-3">
                     <label class="form-label">Документы</label>
                     <input type="file" id="documents" name="documents" multiple
@@ -100,10 +90,10 @@
                 </div>
 
                 <div class="col-auto mt-3 mx-3">
-                    <label class="form-label">Файл INB-FORM</label>
+                    <label class="form-label">Файл OUT-FORM</label>
                     <input type="file"
-                           id="inb_form"
-                           name="inb_form"
+                           id="out_form"
+                           name="out_form"
                            class="form-control form-control-sm w-auto"
                            accept=".xlsx,.xls,.csv">
                 </div>
@@ -129,25 +119,26 @@
                     <ul class="mb-3">
                         <li>Склад</li>
                         <li>Статус</li>
-                        <li>Поставщик в формате:
+                        <li>Заказчик в формате:
                             <b>ИП Иванов Александ Владимирович</b>, <b>ООО Инфотех</b>
                         </li>
-                        <li>Планируемая дата поставки</li>
+                        <li>Планируемая дата отгрузки</li>
+                        <li>Фактическая дата отгрузки (завершена или отменена)</li>
                         <li>Описание</li>
                     </ul>
 
                     <p class="mb-2">
                         Скачайте файл
                         <b>
-                            <a class="get-inb-form-button" type="button" href="{% url 'bound:download_inbound_form' %}">
-                                Форма-Поставки
+                            <a class="get-inb-form-button" type="button" href="{% url 'wave:download_outbound_form' %}">
+                                Форма-Отгрузки
                             </a>
                         </b>
-                        и заполните таблицу товаров (Партномер, Вес г, Количество, Описание)
+                        и заполните таблицу товаров (Партномер, Количество)
                     </p>
 
                     <p class="mb-2">
-                        Приложите документы поставки (не более 15) и файл с заполненной таблицей поставки
+                        Приложите документы отгрузки (не более 15) и файл с заполненной таблицей отгрузки
                     </p>
 
                     <p style="color: gray;">
@@ -163,8 +154,8 @@
 {% endblock %}
 
 {% block scripts %}
-<script src="/static/js/inb_form_validation.js"></script>
-<script src="/static/js/inb_files.js"></script>
+<script src="/static/js/out_form_validation.js"></script>
+<script src="/static/js/wave_files.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.8/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.min.js"></script>
 {% endblock %}

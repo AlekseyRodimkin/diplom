@@ -1,12 +1,8 @@
 from django import forms
-from django.conf import settings
 from django.core.exceptions import ValidationError
 from warehouse.models import Stock
 
-from .models import Inbound
-
-# Статусы продублированы от Models.Inbound.INBOUND_STATUS_CHOICES, но без draft
-INBOUND_STATUS_CHOICES = [
+WAVE_STATUS_CHOICES = [
     ("planned", "Запланирован"),
     ("in_progress", "В процессе"),
     ("completed", "Завершен"),
@@ -14,15 +10,27 @@ INBOUND_STATUS_CHOICES = [
 ]
 
 
-class InboundSearchForm(forms.Form):
-    """Форма на вкладке Поиск поставки"""
-
+class WaveSearchForm(forms.Form):
     stock = forms.ModelChoiceField(
         queryset=Stock.objects.all(), required=False, label="Склад"
     )
     status = forms.ChoiceField(
-        choices=[("", "---")] + INBOUND_STATUS_CHOICES, required=False, label="Статус"
+        choices=[("", "---")] + WAVE_STATUS_CHOICES, required=False, label="Статус"
     )
+    planned_date = forms.DateField(
+        required=False,
+        label="Планируемая дата",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+    actual_date = forms.DateField(
+        required=False,
+        label="Фактическая дата",
+        widget=forms.DateInput(attrs={"type": "date"}),
+    )
+
+
+class InboundSearchForm(WaveSearchForm):
+    """Форма на вкладке Поиск поставки"""
 
     inbound_number = forms.CharField(
         max_length=50,
@@ -38,28 +46,9 @@ class InboundSearchForm(forms.Form):
         widget=forms.TextInput(attrs={"placeholder": "ИП..."}),
     )
 
-    planned_date = forms.DateField(
-        required=False,
-        label="Планируемая дата",
-        widget=forms.DateInput(attrs={"type": "date"}),
-    )
 
-    actual_date = forms.DateField(
-        required=False,
-        label="Фактическая дата",
-        widget=forms.DateInput(attrs={"type": "date"}),
-    )
-
-
-class OutboundSearchForm(forms.Form):
+class OutboundSearchForm(WaveSearchForm):
     """Форма на вкладке Поиск отгрузки"""
-
-    stock = forms.ModelChoiceField(
-        queryset=Stock.objects.all(), required=False, label="Склад"
-    )
-    status = forms.ChoiceField(
-        choices=[("", "---")] + INBOUND_STATUS_CHOICES, required=False, label="Статус"
-    )
 
     outbound_number = forms.CharField(
         max_length=50,
@@ -75,61 +64,15 @@ class OutboundSearchForm(forms.Form):
         widget=forms.TextInput(attrs={"placeholder": "ИП..."}),
     )
 
-    planned_date = forms.DateField(
-        required=False,
-        label="Планируемая дата",
-        widget=forms.DateInput(attrs={"type": "date"}),
-    )
 
-    actual_date = forms.DateField(
-        required=False,
-        label="Фактическая дата",
-        widget=forms.DateInput(attrs={"type": "date"}),
-    )
-
-
-# Статусы продублированы от Models.Inbound.INBOUND_STATUS_CHOICES, без Завершен и Отменен
-SECOND_INBOUND_STATUS_CHOICES = [
-    ("planned", "Запланирован"),
-    ("in_progress", "В процессе"),
-    ("completed", "Завершен"),
-    ("cancelled", "Отменен"),
-]
-
-
-# Для отправки файлов как часть формы
-
-# class MultipleFileInput(forms.ClearableFileInput):
-#     allow_multiple_selected = True
-#
-# class MultipleFileField(forms.FileField):
-#     def __init__(self, *args, **kwargs):
-#         kwargs.setdefault("widget", MultipleFileInput())
-#         super().__init__(*args, **kwargs)
-#
-#     def clean(self, data, initial=None):
-#         single_file_clean = super().clean
-#         if isinstance(data, (list, tuple)):
-#             result = [single_file_clean(d, initial) for d in data]
-#         else:
-#             result = single_file_clean(data, initial)
-#         return result
-
-
-class InboundCreateForm(forms.Form):
+class WaveCreateForm(forms.Form):
     stock = forms.ModelChoiceField(
         queryset=Stock.objects.all(), required=True, label="Склад"
     )
     status = forms.ChoiceField(
-        choices=[("", "---")] + SECOND_INBOUND_STATUS_CHOICES,
+        choices=[("", "---")] + WAVE_STATUS_CHOICES,
         required=True,
         label="Статус",
-    )
-    supplier = forms.CharField(
-        max_length=200,
-        required=True,
-        label="Поставщик",
-        widget=forms.TextInput(attrs={"placeholder": "ИП Иванов А.Б."}),
     )
     planned_date = forms.DateField(
         required=True,
@@ -154,8 +97,14 @@ class InboundCreateForm(forms.Form):
         ),
     )
 
-    # Для отправки файлов как часть формы
-    # documents = MultipleFileField(label='Select files', required=False)
+
+class InboundCreateForm(WaveCreateForm):
+    supplier = forms.CharField(
+        max_length=200,
+        required=True,
+        label="Поставщик",
+        widget=forms.TextInput(attrs={"placeholder": "ИП Иванов А.Б."}),
+    )
 
     def clean_supplier(self):
         """
@@ -191,5 +140,51 @@ class InboundCreateForm(forms.Form):
         # Завершенная поставка должна иметь фактическую дату
         if status == "completed" and actual_date is None:
             raise ValidationError("Завершенная поставка должна иметь фактическую дату")
+
+        return cleaned
+
+
+class OutboundCreateForm(WaveCreateForm):
+    recipient = forms.CharField(
+        max_length=200,
+        required=True,
+        label="Заказчик",
+        widget=forms.TextInput(attrs={"placeholder": "ИП Иванов А.Б."}),
+    )
+
+    def clean_supplier(self):
+        """
+        Валидируем recipient
+        - Минимальная длинна строки 5 символов
+        """
+        recipient = self.cleaned_data.get("recipient").strip().upper()
+        if len(recipient) < 4:
+            raise ValidationError("Название заказчика слишком короткое")
+        return recipient
+
+    def clean(self):
+        """
+        ("planned", "Запланирован"),
+        ("in_progress", "В процессе"),
+        ("completed", "Завершен"),
+        ("cancelled", "Отменен"),
+        """
+        cleaned = super().clean()
+
+        planned_date = cleaned.get("planned_date")
+        actual_date = cleaned.get("actual_date")
+        status = cleaned.get("status")
+
+        # Фактическая дата может быть раньше планируемой
+
+        # Незавершенная отгрузка не может иметь фактическую дату
+        if status in ("planned", "in_progress", "cancelled") and actual_date:
+            raise ValidationError(
+                "Незавершенная отгрузка не может иметь фактическую дату"
+            )
+
+        # Завершенная отгрузка должна иметь фактическую дату
+        if status == "completed" and actual_date is None:
+            raise ValidationError("Завершенная отгрузка должна иметь фактическую дату")
 
         return cleaned
