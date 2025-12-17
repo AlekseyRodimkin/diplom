@@ -15,7 +15,7 @@ from warehouse.models import Item, Place, PlaceItem
 
 from .forms import (InboundCreateForm, InboundSearchForm, OutboundCreateForm,
                     OutboundSearchForm)
-from .models import Inbound, InboundStatusService, Outbound
+from .models import Inbound, InboundStatusService, Outbound, OutboundStatusService
 from .services import (build_zip_from_folder, create_items, create_wave,
                        parse_wave_form_file, save_file,
                        validate_and_save_wave_files)
@@ -338,9 +338,10 @@ class OutboundCreateView(BaseWaveCreateView):
 
 
 def is_operator_or_director_or_admin(user):
+    """Проверка доступа"""
     return (
-        user.groups.filter(name__in=["admin", "operator", "director"]).exists()
-        or user.is_superuser
+            user.groups.filter(name__in=["admin", "operator", "director"]).exists()
+            or user.is_superuser
     )
 
 
@@ -372,6 +373,33 @@ def inbound_change_status(request, pk):
 
 
 @login_required
+@user_passes_test(is_operator_or_director_or_admin)
+def outbound_change_status(request, pk):
+    """Изменение статуса outbound"""
+    outbound = get_object_or_404(Outbound, pk=pk)
+
+    if request.method == "POST":
+        status_value = request.POST.get("status")
+
+        if status_value in dict(Outbound.STATUS_CHOICES):
+            try:
+                OutboundStatusService.change_status(
+                    outbound=outbound, new_status=status_value
+                )
+                messages.success(request, "Статус обновлён")
+            except Exception as e:
+                logger.exception("Ошибка при смене статуса outbound #%s: %s", pk, e)
+                messages.error(request, e)
+        else:
+            messages.error(request, f"Некорректный статус: {status_value}")
+
+    referer = request.META.get("HTTP_REFERER")
+    if referer:
+        return redirect(referer)
+    return redirect("/")
+
+
+@login_required
 def inbound_items(request, pk):
     logger.debug("inbound_items(%s)", pk)
     inbound = Inbound.objects.prefetch_related("inbound_items__item").get(pk=pk)
@@ -384,6 +412,23 @@ def inbound_items(request, pk):
             "description": ii.item.description,
         }
         for ii in inbound.inbound_items.all()
+    ]
+
+    return JsonResponse(data, safe=False)
+
+
+def outbound_items(request, pk):
+    logger.debug("outbound_items(%s)", pk)
+    outbound = Outbound.objects.prefetch_related("outbound_items__item").get(pk=pk)
+
+    data = [
+        {
+            "item_code": ii.item.item_code,
+            "qty": ii.total_quantity,
+            "weight": ii.item.weight,
+            "description": ii.item.description,
+        }
+        for ii in outbound.outbound_items.all()
     ]
 
     return JsonResponse(data, safe=False)

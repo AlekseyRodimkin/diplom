@@ -65,9 +65,9 @@ class Wave(models.Model):
     def save(self, *args, **kwargs):
         """Устанавливаем фактическую дату при завершении"""
         if (
-            self.status == "completed"
-            and not self.actual_date
-            and (self.pk is None or Wave.objects.get(pk=self.pk).status != "completed")
+                self.status == "completed"
+                and not self.actual_date
+                and (self.pk is None or Wave.objects.get(pk=self.pk).status != "completed")
         ):
             self.actual_date = timezone.now().date()
 
@@ -196,9 +196,10 @@ class Outbound(Wave):
     @transaction.atomic
     def save(self, *args, **kwargs):
         """Автогенерация номера отгрузки"""
-        if not self.pk:
-            super().save(*args, **kwargs)
-        if not self.outbound_number:
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        if is_new and not self.outbound_number:
             year = timezone.now().year
             count = Outbound.objects.filter(created_at__year=year).count()
             self.outbound_number = f"OUT-{year}-{count:04d}"
@@ -281,50 +282,53 @@ class InboundStatusService:
             raise ValidationError(f"Недопустимый переход: {old_status} → {new_status}")
 
     @staticmethod
-    def _delete_inbound_place_items(inbound: Inbound):
+    def _planned_to_in_progress(inbound: Inbound):
         logger.debug(
-            "InboundStatusService._delete_inbound_place_items(inb_pk:%s)", inbound.pk
+            "InboundStatusService._planned_to_in_progress(inb_pk:%s)", inbound.pk
         )
-
-        inbound_place = Place.objects.get(title="INBOUND")
-        item_ids = inbound.inbound_items.values_list("item_id", flat=True)
-        PlaceItem.objects.filter(place=inbound_place, item_id__in=item_ids).delete()
-
-    @staticmethod
-    def _inb_items_to_inbound(inbound: Inbound):
-        """Метод заселения деталей из поставки на адрес INBOUND"""
-        logger.debug(
-            "InboundStatusService._inb_items_to_inbound(inb_pk:%s)", inbound.pk
-        )
-
+        # получаем адрес inbound
         inbound_place = Place.objects.get(title="INBOUND")
 
-        for ii in inbound.inbound_items.all():
+        # создание заселения деталей из поставки на адрес INBOUND
+        for inbound_item in inbound.inbound_items.all():
             PlaceItem.objects.create(
-                item=ii.item,
+                item=inbound_item.item,
                 place=inbound_place,
-                quantity=ii.total_quantity,
+                quantity=inbound_item.total_quantity,
                 status="inbound",
             )
 
     @staticmethod
-    def _inb_items_inbound_to_new(inbound: Inbound):
-        """Метод переселения позиций поставки, заселенных с inbound на new"""
+    def _in_progress_to_completed(inbound: Inbound):
         logger.debug(
-            "InboundStatusService._inb_items_inbound_to_new(inb_pk:%s)",
-            inbound.pk,
+            "InboundStatusService._in_progress_to_completed(inb_pk:%s)", inbound.pk
         )
-
-        new_place = Place.objects.get(title="NEW")
-
-        items = PlaceItem.objects.filter(
-            item__in=[ii.item for ii in inbound.inbound_items.all()],
+        # получаем места с товарами из поставки на адресе inbound
+        place_items = PlaceItem.objects.filter(
+            item__in=[inbound_item.item for inbound_item in inbound.inbound_items.all()],
             place__title="INBOUND",
         )
 
-        for pi in items:
-            pi.place = new_place
-            pi.save()
+        # получаем место new
+        new_place = Place.objects.get(title="NEW")
+
+        # меняем адрес у заселесений (переселение) c inbound на new
+        for place_item in place_items:
+            place_item.place = new_place
+            place_item.save()
+
+    @staticmethod
+    def _in_progress_to_cancelled(inbound: Inbound):
+        logger.debug(
+            "InboundStatusService._in_progress_to_cancelled(inb_pk:%s)",
+            inbound.pk,
+        )
+        # получение id item из поставки
+        item_ids = inbound.inbound_items.values_list("item_id", flat=True)
+        # получаем адрес inbound
+        inbound_place = Place.objects.get(title="INBOUND")
+        # удаление PlaceItem с местом inbound и товарами поставки
+        PlaceItem.objects.filter(place=inbound_place, item_id__in=item_ids).delete()
 
     @classmethod
     def change_status(cls, *, inbound, new_status: str):
@@ -340,23 +344,167 @@ class InboundStatusService:
         with transaction.atomic():
 
             # planned -> in_progress
+            # создать заселение деталей поставки на inbound
             if old_status == "planned" and new_status == "in_progress":
-                cls._inb_items_to_inbound(inbound)
+                cls._planned_to_in_progress(inbound)
+
 
             # planned -> cancelled
             elif old_status == "planned" and new_status == "cancelled":
                 pass
 
             # in_progress -> completed
+            # получаем все PlaceItem с товарами из поставки (InboundItems) и адресом inbound
+            # получаем место new
+            # переселяем заселения поставки с inbound на new
             elif old_status == "in_progress" and new_status == "completed":
-                cls._inb_items_inbound_to_new(inbound)
+                cls._in_progress_to_completed(inbound)
+
 
             # in_progress -> cancelled
+            # получаем id товаров поставки
+            # получаем адрес inbound
+            # удаляем места с ними и адресом inbound
             elif old_status == "in_progress" and new_status == "cancelled":
-                cls._delete_inbound_place_items(inbound)
+                cls._in_progress_to_cancelled(inbound)
+
 
             else:
                 raise ValidationError("Неподдерживаемый переход")
 
             inbound.status = new_status
             inbound.save(update_fields=["status"])
+
+
+class OutboundStatusService:
+
+    @staticmethod
+    def _validate_transition(old_status, new_status):
+        """Метод валидации перехода"""
+        allowed = ALLOWED_TRANSITIONS.get(old_status, set())
+        if new_status not in allowed:
+            raise ValidationError(f"Недопустимый переход: {old_status} → {new_status}")
+
+    @staticmethod
+    def _planned_to_in_progress(outbound: Outbound):
+        logger.debug("OutboundStatusService._planned_to_in_progress(out_pk:%s)", outbound.pk)
+
+        outbound_place = Place.objects.get(title="OUTBOUND")
+
+        for outbound_item in outbound.outbound_items.all():
+            item = outbound_item.item
+            quantity_needed = outbound_item.total_quantity
+            storage_items = PlaceItem.objects.filter(item=item, status="ok").order_by("id")
+
+            # всего можем снять с адресов
+            total_available = sum(place_item.quantity for place_item in storage_items)
+
+            if total_available < quantity_needed:
+                raise ValidationError(
+                    f"Недостаточно {item} на складе: требуется {quantity_needed}, доступно {total_available}")
+
+            remaining_needed = quantity_needed  # осталось необходимо
+            for place_item in storage_items:
+
+                if remaining_needed <= 0:
+                    break
+
+                if place_item.quantity <= remaining_needed:  # если товара на адресе <= кол-ва для снятия
+                    remaining_needed -= place_item.quantity  # осталось - на адресе
+                    place_item.delete()  # удаляем адрес
+
+                else:
+                    place_item.quantity -= remaining_needed
+                    remaining_needed = 0
+                    place_item.save()
+
+            PlaceItem.objects.create(
+                item=item,
+                place=outbound_place,
+                quantity=quantity_needed,
+                status="outbound",
+            )
+
+    @staticmethod
+    def _in_progress_to_completed(outbound: Outbound):
+        logger.debug(
+            "OutboundStatusService._in_progress_to_completed(out_pk:%s)", outbound.pk
+        )
+        # получаем адрес outbound
+        outbound_place = Place.objects.get(title="OUTBOUND")
+
+        # получаем id товаров из отгрузки
+        item_ids = outbound.outbound_items.values_list("item_id", flat=True)
+
+        # удаляем места с адресом outbound и деталями из отгрузки
+        PlaceItem.objects.filter(place=outbound_place, item_id__in=item_ids).delete()
+
+    @staticmethod
+    def _in_progress_to_cancelled(outbound: Outbound):
+        logger.debug(
+            "OutboundStatusService._in_progress_to_cancelled(out_pk:%s)", outbound.pk
+        )
+        # получаем адрес new и OUTBOUND
+        new_place = Place.objects.get(title="NEW")
+        outbound_place = Place.objects.get(title="OUTBOUND")
+
+        # получаем места с товарами из отгрузки и адресом outbound
+        place_items = PlaceItem.objects.filter(
+            item__in=[outbound_item.item for outbound_item in outbound.outbound_items.all()],
+            place=outbound_place,
+        )
+
+        for place_item in place_items:
+            existing, created = PlaceItem.objects.get_or_create(
+                place=new_place,
+                item=place_item.item,
+                defaults={'quantity': 0, 'status': 'ok'}
+            )
+            existing.quantity += place_item.quantity
+            existing.status = 'ok'
+            existing.save()
+
+            place_item.delete()
+
+    @classmethod
+    def change_status(cls, *, outbound, new_status: str):
+        logger.debug(
+            "OutboundStatusService.change_status(out_pk:%s, new_status:%s)",
+            outbound.pk,
+            new_status,
+        )
+
+        old_status = outbound.status
+        cls._validate_transition(old_status, new_status)
+
+        with transaction.atomic():
+
+            # planned -> in_progress
+            if old_status == "planned" and new_status == "in_progress":
+                cls._planned_to_in_progress(outbound)
+
+            # planned -> cancelled
+            elif old_status == "planned" and new_status == "cancelled":
+                pass
+
+            # in_progress -> completed
+            # получаем адрес outbound
+            # получаем id товаров из отгрузки
+            # удаляем места с адресом outbound и деталями из отгрузки
+            elif old_status == "in_progress" and new_status == "completed":
+                cls._in_progress_to_completed(outbound)
+
+
+            # in_progress -> cancelled
+            # получаем адрес new
+            # получаем места с товарами из отгрузки и адресом outbound
+            # меняем адрес у заселений на new
+            elif old_status == "in_progress" and new_status == "cancelled":
+                cls._in_progress_to_cancelled(outbound)
+
+
+            else:
+                raise ValidationError("Неподдерживаемый переход")
+
+            outbound.status = new_status
+            outbound.save(update_fields=["status"])

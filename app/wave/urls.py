@@ -1,8 +1,6 @@
 from django.urls import path
 
-from .views import (InboundCreateView, InboundSearchView, OutboundCreateView,
-                    OutboundSearchView, download_wave_docs, download_wave_form,
-                    inbound_change_status, inbound_items)
+from .views import *
 
 app_name = "wave"
 
@@ -57,4 +55,10 @@ urlpatterns = [
         name="inbound_change_status",
     ),
     path("inbound/<int:pk>/items/", inbound_items, name="inbound_items"),
+    path(
+        "outbound/<int:pk>/change_status/",
+        outbound_change_status,
+        name="outbound_change_status",
+    ),
+    path("outbound/<int:pk>/items/", outbound_items, name="outbound_items"),
 ]
