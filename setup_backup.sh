@@ -1,26 +1,16 @@
 #!/bin/bash
 set -euo pipefail
 
-# Папка для скриптов
-BACKUP_SCRIPTS_DIR="$HOME/warehouse_backup"
+set -a
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.env"
+set +a
+
+# Ваш полный путь к папке проекта
+$BACKUP_SCRIPTS_DIR="$(PROJECT_DIR)/warehouse_backup"
 mkdir -p "$BACKUP_SCRIPTS_DIR"
 
-# Папка для бэкапов
-BACKUP_DIR="$HOME/warehouse_backup/backups"
+BACKUP_DIR="$BACKUP_SCRIPTS_DIR/backups"
 mkdir -p "$BACKUP_DIR"
-
-# yandex.env
-cat > "$BACKUP_SCRIPTS_DIR/yandex.env" <<EOL
-YANDEX_TOKEN=<token_for_yandex_app>
-CONTAINER_NAME=your_container_name
-POSTGRES_USER_NAME=postgres
-POSTGRES_DB_NAME=your_db_name
-KEEP_BACKUPS=5
-PUB_KEY_ID=<id_PUB_gpg_key>
-EOL
-
-chmod 600 "$BACKUP_SCRIPTS_DIR/yandex.env"
-sudo chown root:root "$BACKUP_SCRIPTS_DIR/yandex.env"
 
 cat > "$BACKUP_SCRIPTS_DIR/backup_to_storage.py" <<'PYTHON'
 import sys
@@ -125,17 +115,15 @@ cat > "$BACKUP_SCRIPTS_DIR/backup.sh" <<'EOS'
 set -euo pipefail
 
 set -a
-source ~/warehouse_backup/yandex.env
+source ../../.env
 set +a
 
-source ~/warehouse_backup/yandex.env
-
 DATE=$(date +%Y-%m-%d)
-SQL_FILE="$HOME/warehouse_backup/backups/backup-$DATE.sql"
-CRYPTED_FILE="$HOME/warehouse_backup/backups/backup-$DATE.gpg"
+SQL_FILE="$(PROJECT_DIR)/warehouse_backup/backups/backup-$DATE.sql"
+CRYPTED_FILE="$(PROJECT_DIR)/warehouse_backup/backups/backup-$DATE.gpg"
 
 # дамп базы
-docker exec -t "$CONTAINER_NAME" pg_dump -U "$POSTGRES_USER_NAME" "$POSTGRES_DB_NAME" > "$SQL_FILE"
+docker exec -t "$(warehouse_postgres_db)" pg_dump -U "$(POSTGRES_USER)" "$(POSTGRES_DB)" > "$SQL_FILE"
 
 # шифрование
 gpg --encrypt --recipient "$PUB_KEY_ID" -o "$CRYPTED_FILE" "$SQL_FILE"
@@ -144,12 +132,12 @@ gpg --encrypt --recipient "$PUB_KEY_ID" -o "$CRYPTED_FILE" "$SQL_FILE"
 rm -f "$SQL_FILE"
 
 # отправка на Яндекс Диск
-python3 ~/warehouse_backup/backup_to_storage.py "$CRYPTED_FILE"
+python3 "$(PROJECT_DIR)"/warehouse_backup/backup_to_storage.py "$CRYPTED_FILE"
 EOS
 
 chmod +x "$BACKUP_SCRIPTS_DIR/backup.sh"
 
-python3 -m pip install --upgrade requests
+sudo apt install -y python3-requests
 
-CRON_CMD="0 0 * * * /usr/bin/bash $BACKUP_SCRIPTS_DIR/backup.sh >> "$HOME/warehouse_backup/backup.log" 2>&1"
+CRON_CMD="0 0 * * * /usr/bin/bash $BACKUP_SCRIPTS_DIR/backup.sh >> "$BACKUP_SCRIPTS_DIR/warehouse_backup/backup.log" 2>&1"
 (crontab -l 2>/dev/null | grep -F -q "$BACKUP_SCRIPTS_DIR/backup.sh") || (crontab -l 2>/dev/null; echo "$CRON_CMD") | crontab -

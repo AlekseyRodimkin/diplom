@@ -1,8 +1,20 @@
 {% extends 'warehouse/base.html' %}
 
-{% block title %}Транзакции{% endblock %}
+{% block title %}
+{% if user.is_authenticated %}
+Транзакции
+{% else %}
+Главная
+{% endif %}
+{% endblock %}
 
-{% block page_title %}Транзакции{% endblock %}
+{% block page_title %}
+{% if user.is_authenticated %}
+Транзакции
+{% else %}
+Главная
+{% endif %}
+{% endblock %}
 
 {% block body %}
 {% if user.is_authenticated %}

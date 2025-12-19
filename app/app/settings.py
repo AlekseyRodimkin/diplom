@@ -28,7 +28,7 @@ ALLOWED_HOSTS = [
 
 INTERNAL_IPS = ["127.0.0.1"]
 
-DEBUG = os.getenv("DJANGO_DEBUG", "0") == "1"
+DEBUG = os.getenv("DJANGO_DEBUG", "1") == "1"
 
 if DEBUG:
     import socket
@@ -88,15 +88,15 @@ AUTHENTICATION_BACKENDS = [
 ]
 
 ACCOUNT_SIGNUP_FIELDS = ["email*", "username*", "password1*", "password2*"]
-ACCOUNT_EMAIL_VERIFICATION = "mandatory"
+ACCOUNT_EMAIL_VERIFICATION = "none"
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 ACCOUNT_LOGIN_METHODS = {"email"}
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 EMAIL_HOST = os.getenv("EMAIL_HOST", "smtp.gmail.com")
-EMAIL_PORT = os.getenv("EMAIL_PORT", 587)
-EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "0") == "1"
+EMAIL_PORT = int(os.getenv("EMAIL_PORT", 587))
+EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "1") == "1"
 EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
