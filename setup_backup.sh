@@ -6,12 +6,15 @@ source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.env"
 set +a
 
 # Ваш полный путь к папке проекта
-$BACKUP_SCRIPTS_DIR="$(PROJECT_DIR)/warehouse_backup"
+BACKUP_SCRIPTS_DIR="$PROJECT_DIR/warehouse_backup"
+echo 'Создание папки /warehouse_backup'
 mkdir -p "$BACKUP_SCRIPTS_DIR"
 
 BACKUP_DIR="$BACKUP_SCRIPTS_DIR/backups"
+echo 'Создание папки /warehouse_backup/backups'
 mkdir -p "$BACKUP_DIR"
 
+echo 'Создание файла backup_to_storage.py'
 cat > "$BACKUP_SCRIPTS_DIR/backup_to_storage.py" <<'PYTHON'
 import sys
 import requests
@@ -94,7 +97,6 @@ if __name__ == "__main__":
         sys.exit(1)
 
     file_path = sys.argv[1]
-    dir_path, file_name = os.path.split(file_path)
     keep_backups = int(os.environ.get("KEEP_BACKUPS", "5"))
 
     ya_token = os.environ.get("YANDEX_TOKEN")
@@ -102,28 +104,29 @@ if __name__ == "__main__":
         raise RuntimeError("YANDEX_TOKEN не определен")
 
     upload_file_to_disk(
-        dir_path=dir_path,
+        dir_path=$BACKUP_DIR,
         file_name=file_name,
-        disk_folder_path="/backups",
+        disk_folder_path=f"/Приложения/$YANDEX_APP_NAME",
         ya_token=ya_token,
     )
     delete_old_backup(keep=keep_backups)
 PYTHON
 
+echo 'Создание файла backup.sh'
 cat > "$BACKUP_SCRIPTS_DIR/backup.sh" <<'EOS'
 #!/bin/bash
 set -euo pipefail
 
 set -a
-source ../../.env
+source ../.env
 set +a
 
 DATE=$(date +%Y-%m-%d)
-SQL_FILE="$(PROJECT_DIR)/warehouse_backup/backups/backup-$DATE.sql"
-CRYPTED_FILE="$(PROJECT_DIR)/warehouse_backup/backups/backup-$DATE.gpg"
+SQL_FILE="$PROJECT_DIR/warehouse_backup/backups/backup-$DATE.sql"
+CRYPTED_FILE="$PROJECT_DIR/warehouse_backup/backups/backup-$DATE.gpg"
 
 # дамп базы
-docker exec -t "$(warehouse_postgres_db)" pg_dump -U "$(POSTGRES_USER)" "$(POSTGRES_DB)" > "$SQL_FILE"
+docker exec -t warehouse_postgres_db pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" > "$SQL_FILE"
 
 # шифрование
 gpg --encrypt --recipient "$PUB_KEY_ID" -o "$CRYPTED_FILE" "$SQL_FILE"
@@ -132,12 +135,15 @@ gpg --encrypt --recipient "$PUB_KEY_ID" -o "$CRYPTED_FILE" "$SQL_FILE"
 rm -f "$SQL_FILE"
 
 # отправка на Яндекс Диск
-python3 "$(PROJECT_DIR)"/warehouse_backup/backup_to_storage.py "$CRYPTED_FILE"
+python3 "$PROJECT_DIR"/warehouse_backup/backup_to_storage.py "$CRYPTED_FILE"
 EOS
 
 chmod +x "$BACKUP_SCRIPTS_DIR/backup.sh"
+echo 'Делаю backup.sh исполняемым'
 
+echo 'Устанавливаю пакет requests (без виртуального окружения)'
 sudo apt install -y python3-requests
 
+echo 'Произвожу настройку cron для ежедневного запуска генерации бэкапа, шифрования и отправки на Yandex Disk'
 CRON_CMD="0 0 * * * /usr/bin/bash $BACKUP_SCRIPTS_DIR/backup.sh >> "$BACKUP_SCRIPTS_DIR/warehouse_backup/backup.log" 2>&1"
 (crontab -l 2>/dev/null | grep -F -q "$BACKUP_SCRIPTS_DIR/backup.sh") || (crontab -l 2>/dev/null; echo "$CRON_CMD") | crontab -
