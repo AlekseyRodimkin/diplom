@@ -28,7 +28,7 @@
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/inbound-search-2.png" style="width:90%;">
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/inbound-status.png" style="width:90%;">
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/inbound-more.png" style="width:70%;">
-<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/zip.png" style="width:70%;">
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/zip.png" style="width:50%;">
 
 #### 
 <img src="" style="width:70%;">
@@ -55,6 +55,7 @@ cp .env.template .env
 ```bash
 docker compose build && docker compose up -d
 ```
+При запуске устанавливается фикстура с: группами с назначеными правами, администратором, техническими адресами, 1 складом, 2 зонами и 2 местами.
 
 ---
 
