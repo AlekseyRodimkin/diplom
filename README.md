@@ -38,6 +38,7 @@
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/outbound-search-2.png" style="width:90%;">
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/outbound-more.png" style="width:90%;">
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/outbound-zip.png" style="width:50%;">
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/pack-list.png" style="width:90%;">
 
 #### Поиск товара
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/item-search.png" style="width:90%;">
