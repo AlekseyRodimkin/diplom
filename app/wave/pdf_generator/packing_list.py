@@ -57,7 +57,7 @@ def generate_packing_list_pdf(outbound):
     for outbound_item in outbound.outbound_items.select_related("item").all():
         item = outbound_item.item
         weight_gram = getattr(item, "weight", 0) or 0
-        row_weight = outbound_item.total_quantity * weight_gram
+        row_weight = outbound_item.total_quantity * weight_gram / 1000
         total_weight += row_weight
 
         data.append([
