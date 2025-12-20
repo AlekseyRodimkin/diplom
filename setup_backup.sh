@@ -5,7 +5,6 @@ set -a
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.env"
 set +a
 
-# Ваш полный путь к папке проекта
 BACKUP_SCRIPTS_DIR="$PROJECT_DIR/warehouse_backup"
 echo 'Создание папки /warehouse_backup'
 mkdir -p "$BACKUP_SCRIPTS_DIR"
@@ -14,136 +13,88 @@ BACKUP_DIR="$BACKUP_SCRIPTS_DIR/backups"
 echo 'Создание папки /warehouse_backup/backups'
 mkdir -p "$BACKUP_DIR"
 
-echo 'Создание файла backup_to_storage.py'
-cat > "$BACKUP_SCRIPTS_DIR/backup_to_storage.py" <<'PYTHON'
-import sys
-import requests
-import os
-from pathlib import Path
-
-YANDEX_DISK_BASE_URL = "https://cloud-api.yandex.net/v1/disk"
-BACKUP_DIR = Path.home() / "warehouse_backup" / "backups"
-
-files = sorted(BACKUP_DIR.glob("backup-*.gpg"))
-
-
-def delete_old_backup(keep=5):
-    if len(files) <= keep:
-        print(f"Бэкапов меньше или равно {keep}, ничего не удаляем.")
-    else:
-        to_delete = files[:-keep]
-        print(f"Удаляем {len(to_delete)} старых файлов:")
-        for f in to_delete:
-            print(f"Удаляем {f}")
-            f.unlink()
-
-
-def _auth_headers(token: str) -> dict:
-    """Формирование заголовков авторизации."""
-    return {"Authorization": f"OAuth {token}"}
-
-
-def upload_file_to_disk(
-        dir_path: str,
-        file_name: str,
-        disk_folder_path: str,
-        ya_token: str,
-) -> bool:
-    """Загрузка файла на Яндекс Диск."""
-    print(
-        f"upload_file_to_disk(dir_path={dir_path}, file_name={file_name}, "
-        f"disk_folder_path={disk_folder_path})"
-    )
-
-    upload_url_api = f"{YANDEX_DISK_BASE_URL}/resources/upload"
-    headers = _auth_headers(ya_token)
-    params = {"path": f"{disk_folder_path}/{file_name}", "overwrite": "true"}
-
-    path = os.path.join(dir_path, file_name)
-    if not os.path.isfile(path):
-        print(f"Файл не найден: {path}")
-        return False
-
-    try:
-        print("Запрос URL загрузки с Яндекс Диска")
-        resp = requests.get(upload_url_api, headers=headers, params=params)
-        resp.raise_for_status()
-
-        upload_url = resp.json().get("href")
-        if not upload_url:
-            print("Не удалось получить URL-адрес загрузки.")
-            return False
-
-        print("Загрузка файла на Яндекс Диск")
-        with open(path, "rb") as f:
-            upload_resp = requests.put(upload_url, data=f)
-            upload_resp.raise_for_status()
-
-        if upload_resp.status_code == 201:
-            print("Файл успешно загружен")
-            return True
-
-        print("Загрузка файла не удалась")
-        return False
-
-    except requests.RequestException as e:
-        print(f"Ошибка при загрузке файла на Яндекс Диск: {e}")
-        return False
-
-
-if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Используйте: python3 backup_to_storage.py <путь_к_бэкапу>")
-        sys.exit(1)
-
-    file_path = sys.argv[1]
-    keep_backups = int(os.environ.get("KEEP_BACKUPS", "5"))
-
-    ya_token = os.environ.get("YANDEX_TOKEN")
-    if not ya_token:
-        raise RuntimeError("YANDEX_TOKEN не определен")
-
-    upload_file_to_disk(
-        dir_path=$BACKUP_DIR,
-        file_name=file_name,
-        disk_folder_path=f"/Приложения/$YANDEX_APP_NAME",
-        ya_token=ya_token,
-    )
-    delete_old_backup(keep=keep_backups)
-PYTHON
-
 echo 'Создание файла backup.sh'
 cat > "$BACKUP_SCRIPTS_DIR/backup.sh" <<'EOS'
 #!/bin/bash
 set -euo pipefail
 
 set -a
-source ../.env
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")/../" && pwd)/.env"
 set +a
 
 DATE=$(date +%Y-%m-%d)
 SQL_FILE="$PROJECT_DIR/warehouse_backup/backups/backup-$DATE.sql"
 CRYPTED_FILE="$PROJECT_DIR/warehouse_backup/backups/backup-$DATE.gpg"
 
-# дамп базы
+echo 'Дамп базы'
 docker exec -t warehouse_postgres_db pg_dump -U "$POSTGRES_USER" "$POSTGRES_DB" > "$SQL_FILE"
 
-# шифрование
-gpg --encrypt --recipient "$PUB_KEY_ID" -o "$CRYPTED_FILE" "$SQL_FILE"
+echo 'Шифрование'
+# gpg --encrypt --recipient "$PUB_KEY_ID" -o "$CRYPTED_FILE" "$SQL_FILE"
+gpg --batch --yes --trust-model always --encrypt --recipient "$PUB_KEY_ID" -o "$CRYPTED_FILE" "$SQL_FILE"
 
-# удаляем исходный нешифрованный файл
+echo 'Удаляем исходный нешифрованный файл'
 rm -f "$SQL_FILE"
 
-# отправка на Яндекс Диск
-python3 "$PROJECT_DIR"/warehouse_backup/backup_to_storage.py "$CRYPTED_FILE"
+echo 'Отправка файла'
+
+FILE_PATH="$CRYPTED_FILE"
+FILE_NAME=$(basename "$FILE_PATH")
+DIR_PATH=$(dirname "$FILE_PATH")
+TOKEN="${YANDEX_TOKEN:?YANDEX_TOKEN не задан}"
+YANDEX_FOLDER="$YANDEX_APP_NAME"
+KEEP=${KEEP_BACKUPS:-5}
+
+send_bot_notif() {
+    if [[ -z "${BOT_TOKEN:-}" || -z "${CHAT_ID:-}" ]]; then
+        return 1
+    fi
+
+    local url="https://api.telegram.org/bot${BOT_TOKEN}/sendMessage"
+    local text="Резервная копия '$CRYPTED_FILE' загружена в Яндекс Диск"
+
+    curl -s -X POST "$url" \
+         -d "chat_id=${CHAT_ID}" \
+         -d "text=${text}" > /dev/null
+}
+
+echo 'Запрос ссылки по url: https://cloud-api.yandex.net/v1/disk/resources/upload?path=$YANDEX_FOLDER/$FILE_NAME&overwrite=true'
+UPLOAD_URL=$(curl -s -H "Authorization: OAuth $TOKEN" \
+  "https://cloud-api.yandex.net/v1/disk/resources/upload?path=/Приложения/$YANDEX_FOLDER/$FILE_NAME&overwrite=true" | \
+  jq -r '.href')
+
+if [[ -z "$UPLOAD_URL" || "$UPLOAD_URL" == "null" ]]; then
+  echo "Ошибка получения URL для загрузки"
+  exit 1
+fi
+
+echo "Загружаем $FILE_NAME на Яндекс.Диск..."
+curl -s --progress-bar -T "$FILE_PATH" "$UPLOAD_URL" | cat
+
+if [[ ${PIPESTATUS[0]} -eq 0 ]]; then
+  send_bot_notif
+  echo "Файл успешно загружен"
+else
+  echo "Ошибка загрузки"
+  exit 1
+fi
+
+echo "Очистка старых бэкапов (оставляем $KEEP последних)..."
+mapfile -t FILES < <(ls -1t "$DIR_PATH"/backup-*.gpg 2>/dev/null || true)
+
+if [[ ${#FILES[@]} -le $KEEP ]]; then
+  echo "Нечего удалять"
+else
+  for ((i=$KEEP; i<${#FILES[@]}; i++)); do
+    echo "Удаляем ${FILES[$i]}"
+    rm -f "$DIR_PATH/${FILES[$i]}"
+  done
+fi
 EOS
 
 chmod +x "$BACKUP_SCRIPTS_DIR/backup.sh"
-echo 'Делаю backup.sh исполняемым'
+echo 'Файл backup.sh теперь исполняемый'
 
-echo 'Устанавливаю пакет requests (без виртуального окружения)'
-sudo apt install -y python3-requests
-
-echo 'Произвожу настройку cron для ежедневного запуска генерации бэкапа, шифрования и отправки на Yandex Disk'
-CRON_CMD="0 0 * * * /usr/bin/bash $BACKUP_SCRIPTS_DIR/backup.sh >> "$BACKUP_SCRIPTS_DIR/warehouse_backup/backup.log" 2>&1"
+echo 'Производится настройку cron для ежедневного запуска генерации бэкапа, шифрования и отправки на Yandex Disk'
+CRON_CMD="0 0 * * * /usr/bin/bash $BACKUP_SCRIPTS_DIR/backup.sh >> "$BACKUP_SCRIPTS_DIR/backup.log" 2>&1"
 (crontab -l 2>/dev/null | grep -F -q "$BACKUP_SCRIPTS_DIR/backup.sh") || (crontab -l 2>/dev/null; echo "$CRON_CMD") | crontab -
