@@ -42,7 +42,7 @@ FILE_PATH="$CRYPTED_FILE"
 FILE_NAME=$(basename "$FILE_PATH")
 DIR_PATH=$(dirname "$FILE_PATH")
 TOKEN="${YANDEX_TOKEN:?YANDEX_TOKEN не задан}"
-YANDEX_FOLDER="$YANDEX_APP_NAME"
+YANDEX_FOLDER="Приложения/$YANDEX_APP_NAME"
 KEEP=${KEEP_BACKUPS:-5}
 
 send_bot_notif() {
@@ -57,10 +57,33 @@ send_bot_notif() {
          -d "chat_id=${CHAT_ID}" \
          -d "text=${text}" > /dev/null
 }
+echo 'Создаем папку приложения на Диске'
+first_req_url="https://cloud-api.yandex.net/v1/disk/resources?path=$YANDEX_FOLDER"
+RESPONSE=$(curl -s -w "%{http_code}" -H "Authorization: OAuth $TOKEN" "$first_req_url")
+STATUS_CODE=${RESPONSE: -3}
+BODY=${RESPONSE%???}
 
-echo 'Запрос ссылки по url: https://cloud-api.yandex.net/v1/disk/resources/upload?path=$YANDEX_FOLDER/$FILE_NAME&overwrite=true'
+if [ "$STATUS_CODE" -eq 200 ]; then
+    echo "Папка приложения создана"
+else
+    echo "Ошибка API Yandex Disk: Статус $STATUS_CODE"
+    if command -v jq >/dev/null 2>&1 && [ -n "$BODY" ]; then
+        ERROR_MESSAGE=$(echo "$BODY" | jq -r '.message // .description // .error // "Неизвестная ошибка"')
+        echo "Описание: $ERROR_MESSAGE"
+    else
+        if [ -n "$BODY" ]; then
+            echo "Тело ответа:"
+            echo "$BODY"
+        else
+            echo "Тело ответа пустое."
+        fi
+    fi
+    exit
+fi
+
+echo 'Запрос ссылки по url: https://cloud-api.yandex.net/v1/disk/resources/upload?path=/$YANDEX_FOLDER/$FILE_NAME&overwrite=true'
 UPLOAD_URL=$(curl -s -H "Authorization: OAuth $TOKEN" \
-  "https://cloud-api.yandex.net/v1/disk/resources/upload?path=/Приложения/$YANDEX_FOLDER/$FILE_NAME&overwrite=true" | \
+  "https://cloud-api.yandex.net/v1/disk/resources/upload?path=/$YANDEX_FOLDER/$FILE_NAME&overwrite=true" | \
   jq -r '.href')
 
 if [[ -z "$UPLOAD_URL" || "$UPLOAD_URL" == "null" ]]; then
