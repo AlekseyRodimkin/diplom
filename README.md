@@ -9,7 +9,7 @@
 
 ### Скриншоты
 #### Главный экран
-<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/main.png" style="width:50%;">
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/main.png" style="width:70%;">
 
 
 ### Схемы
