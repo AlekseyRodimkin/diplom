@@ -1,11 +1,10 @@
 # Автоматизированная система учета товара
 
 ### Docker контейнеры
-
-- Django App
-- Postgresql
-- NGINX Proxy
-- letsencrypt
+![Django](https://img.shields.io/badge/Django-092E20?logo=django&logoColor=white)
+![Postgres](https://img.shields.io/badge/PostgreSQL-316192?logo=postgresql&logoColor=white)
+![Nginx](https://img.shields.io/badge/Nginx-009639?logo=nginx&logoColor=white)
+![letsencrypt](https://img.shields.io/badge/Let's%20Encrypt-00A85E?logoColor=white)
 
 ### Скриншоты
 #### Главная гость
