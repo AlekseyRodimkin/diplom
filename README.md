@@ -70,7 +70,7 @@
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/schemes/db/db_4.0.png" style="width:70%;">
 
 #### Схема доступов
-<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/schemes/permissions/permissions_4.0.png" style="width:70%;">
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/schemes/permissions/permissions_4.0.png" style="width:100%;">
 
 ### Установка и разворачивание проекта
 
