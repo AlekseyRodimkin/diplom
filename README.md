@@ -20,7 +20,7 @@
 #### Изменение структуры
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/structure-manager.png" style="width:90%;">
 
-#### Создание поставки
+#### Создать поставку
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/inbound-create.png" style="width:90%;">
 
 #### Просмотр поставок
@@ -30,8 +30,38 @@
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/inbound-more.png" style="width:70%;">
 <img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/zip.png" style="width:50%;">
 
-#### 
-<img src="" style="width:70%;">
+#### Создать отгрузку
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/outbound-create.png" style="width:90%;">
+
+#### Просмотр отгрузок
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/outbound-search-1.png" style="width:90%;">
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/outbound-search-2.png" style="width:90%;">
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/outbound-more.png" style="width:90%;">
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/outbound-zip.png" style="width:50%;">
+
+#### Поиск товара
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/item-search.png" style="width:90%;">
+
+#### Поиск партии
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/lot-searh.png" style="width:90%;">
+
+#### Перемещение товара
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/item-move.png" style="width:90%;">
+
+#### История перемещений
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/history.png" style="width:90%;">
+
+#### Просмотр персонала
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/staff-search.png" style="width:90%;">
+
+#### Административная панель
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/admin-dash.png" style="width:90%;">
+
+#### Логин
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/login.png" style="width:90%;">
+
+#### Регистрация
+<img src="https://github.com/AlekseyRodimkin/warehouse/blob/main/README-IMAGES/register.png" style="width:90%;">
 
 ### Схемы
 
